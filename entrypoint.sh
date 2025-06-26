@@ -1,33 +1,48 @@
-# Some low effort error checking
-if [ -z "$SCREEN_WIDTH" ] || [ -z "$SCREEN_HEIGHT" ]; then
-  echo "Error: SCREEN_WIDTH and SCREEN_HEIGHT must be set."
-  exit 1
-fi
+#!/bin/bash
+
+# Environment validation
 if [ -z "$WEB_URL" ] || [ -z "$RTMP_URL" ]; then
   echo "Error: WEB_URL and RTMP_URL must be set."
   exit 1
 fi
 
-# Configure display system
+# Set defaults
+export SCREEN_WIDTH="${SCREEN_WIDTH:-854}"
+export SCREEN_HEIGHT="${SCREEN_HEIGHT:-480}"
+export AUDIO_SOURCE="${AUDIO_SOURCE:-icecast}"
+export FFMPEG_PRESET="${FFMPEG_PRESET:-veryfast}"
+export FRAMERATE="${FRAMERATE:-30}"
+
+echo "Starting PageCaster with Puppeteer..."
+echo "Audio source: $AUDIO_SOURCE"
+echo "Screen size: ${SCREEN_WIDTH}x${SCREEN_HEIGHT}"
+echo "Web URL: $WEB_URL"
+
+# Configure display system for X11 capture
 Xvfb :99 -screen 0 "${SCREEN_WIDTH}"x"${SCREEN_HEIGHT}"x24 &
 export DISPLAY=:99
 
-# Browser time
-chromium --no-first-run --kiosk --no-sandbox --window-size="${SCREEN_WIDTH}","${SCREEN_HEIGHT}" --window-position=0,0 --enable-features=OverlayScrollbar --autoplay-policy=no-user-gesture-required "$WEB_URL" &
+# Configure audio system - run in user mode, not system mode
+rm -rf /var/run/pulse /var/lib/pulse /root/.config/pulse
 
-# Use ffmpeg to capture the display and stream it to an RTMP server
-if [ -z "$ICE_URL" ]; then
-  # ICE_URL is not set, use video with silence
-  ffmpeg -f x11grab -s "${SCREEN_WIDTH}"x"${SCREEN_HEIGHT}" -draw_mouse 0 -i :99.0 \
-      -f lavfi -i anullsrc=channel_layout=stereo:sample_rate=44100 \
-      -c:v libx264 -preset "${FFMPEG_PRESET:-veryfast}" -maxrate 3000k -bufsize 6000k -pix_fmt yuv420p \
-      -c:a aac -b:a 128k -ac 2 \
-      -f flv "$RTMP_URL"
-else
-  # ICE_URL is set, use both video and audio
-  ffmpeg -f x11grab -s "${SCREEN_WIDTH}"x"${SCREEN_HEIGHT}" -draw_mouse 0 -i :99.0 \
-      -i "$ICE_URL" \
-      -c:v libx264 -preset "${FFMPEG_PRESET:-veryfast}" -maxrate 3000k -bufsize 6000k -pix_fmt yuv420p \
-      -c:a aac -b:a 128k -ac 2 \
-      -f flv "$RTMP_URL"
-fi
+# Create a simple PulseAudio configuration
+mkdir -p /root/.config/pulse
+cat > /root/.config/pulse/default.pa << 'EOF'
+load-module module-null-sink sink_name=virtual-audio sink_properties=device.description=Virtual_Audio_Device
+load-module module-native-protocol-unix auth-anonymous=1 socket=/tmp/pulse-socket
+set-default-sink virtual-audio
+EOF
+
+export PULSE_SERVER=unix:/tmp/pulse-socket
+pulseaudio -D --verbose --exit-idle-time=-1 --disallow-exit --disable-shm -F /root/.config/pulse/default.pa
+
+# Wait for PulseAudio to start and create the virtual device
+sleep 5
+
+# Verify audio setup
+echo "Checking audio devices:"
+pulseaudio --check || echo "PulseAudio not running"
+pactl info || echo "pactl failed"
+
+# Start the Node.js Puppeteer application
+exec node src/index.js
