@@ -17,7 +17,9 @@ class PageCaster {
     this.screenHeight = parseInt(process.env.SCREEN_HEIGHT) || 480;
     this.ffmpegPreset = process.env.FFMPEG_PRESET || 'veryfast';
     this.framerate = parseInt(process.env.FRAMERATE) || 30;
-    
+    this.clickTargetOnLoad = process.env.CLICK_TARGET_ON_LOAD;
+    this.clickDelay = parseInt(process.env.CLICK_DELAY) || 1000;
+
     this.browser = null;
     this.page = null;
     this.ffmpegProcess = null;
@@ -36,7 +38,7 @@ class PageCaster {
 
   async setupBrowser() {
     console.log('Starting Puppeteer browser...');
-    
+
     try {
       this.browser = await puppeteer.launch({
         headless: false,  // Use non-headless for X11 display
@@ -62,7 +64,7 @@ class PageCaster {
 
       this.page = await this.browser.newPage();
       console.log('New page created');
-      
+
       await this.page.setViewport({
         width: this.screenWidth,
         height: this.screenHeight
@@ -70,17 +72,46 @@ class PageCaster {
       console.log('Viewport set');
 
       console.log(`Navigating to: ${this.webUrl}`);
-      await this.page.goto(this.webUrl, { 
+      await this.page.goto(this.webUrl, {
         waitUntil: 'domcontentloaded',
-        timeout: 60000 
+        timeout: 60000
       });
       console.log('Page loaded successfully');
 
       await new Promise(resolve => setTimeout(resolve, 2000));
+
+      if (this.clickTargetOnLoad) {
+        await this.clickTargetElement();
+      }
+
       console.log('Browser setup complete');
     } catch (error) {
       console.error('Browser setup failed:', error);
       throw error;
+    }
+  }
+
+  async clickTargetElement() {
+    if (!this.clickTargetOnLoad) {
+      return;
+    }
+
+    try {
+      console.log(`Waiting ${this.clickDelay}ms before clicking target: ${this.clickTargetOnLoad}`);
+      await new Promise(resolve => setTimeout(resolve, this.clickDelay));
+
+      console.log(`Looking for element: ${this.clickTargetOnLoad}`);
+      await this.page.waitForSelector(this.clickTargetOnLoad, {
+        timeout: 10000,
+        visible: true
+      });
+
+      console.log(`Clicking element: ${this.clickTargetOnLoad}`);
+      await this.page.click(this.clickTargetOnLoad);
+      console.log('Element clicked successfully');
+    } catch (error) {
+      console.warn(`Failed to click target element "${this.clickTargetOnLoad}":`, error.message);
+      console.warn('Continuing without clicking the element...');
     }
   }
 

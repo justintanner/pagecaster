@@ -38,6 +38,18 @@ docker run -d \
 -e SCREEN_HEIGHT=480 \
 -e SCREEN_WIDTH=854 \
 justintanner/pagecaster
+
+# With auto-click on page load
+docker run -d \
+--shm-size=256m \
+-e WEB_URL="https://weatherstar.netbymatt.com/" \
+-e AUDIO_SOURCE="browser" \
+-e RTMP_URL="rtmp://supercool.stream:1935/live" \
+-e CLICK_TARGET_ON_LOAD="#play-button" \
+-e CLICK_DELAY=1000 \
+-e SCREEN_HEIGHT=480 \
+-e SCREEN_WIDTH=854 \
+justintanner/pagecaster
 ```
 
 ## Docker Compose
@@ -165,6 +177,8 @@ spec:
 | SCREEN_WIDTH          | no        | Width of browser window (default: 854) | 854 |
 | FFMPEG_PRESET         | no        | FFmpeg encoding preset (default: veryfast) | medium |
 | FRAMERATE             | no        | Video framerate (default: 30) | 60 |
+| CLICK_TARGET_ON_LOAD  | no        | CSS selector of element to click after page load | #play-button |
+| CLICK_DELAY           | no        | Delay in milliseconds before clicking element (default: 1000) | 2000 |
 
 ## Audio Source Options
 
