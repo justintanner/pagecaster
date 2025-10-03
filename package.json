@@ -6,10 +6,11 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "docker:build": "docker build -t pagecaster:local .",
-    "docker:build:version": "docker build -t pagecaster:local -t pagecaster:$(node -p \"require('./package.json').version\") .",
-    "docker:tag:latest": "docker tag pagecaster:local pagecaster:latest",
-    "docker:run": "docker run --rm --shm-size=256m -e WEB_URL=https://example.com -e RTMP_URL=rtmp://localhost:1935/live -e AUDIO_SOURCE=silent pagecaster:local"
+    "docker:build": "docker build -t justintanner/pagecaster:local .",
+    "docker:build:version": "docker build -t justintanner/pagecaster:local -t justintanner/pagecaster:$(node -p \"require('./package.json').version\") .",
+    "docker:tag:latest": "docker tag justintanner/pagecaster:local justintanner/pagecaster:latest",
+    "docker:push": "docker push justintanner/pagecaster:latest",
+    "docker:run": "docker run --rm --shm-size=256m -e WEB_URL=https://example.com -e RTMP_URL=rtmp://localhost:1935/live -e AUDIO_SOURCE=silent justintanner/pagecaster:local"
   },
   "dependencies": {
     "puppeteer": "^23.0.0",

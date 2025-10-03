@@ -16,7 +16,7 @@ docker run -d \
 -e RTMP_URL="rtmp://supercool.stream:1935/live" \
 -e SCREEN_HEIGHT=480 \
 -e SCREEN_WIDTH=854 \
-ghcr.io/rmitchellscott/pagecaster
+justintanner/pagecaster
 
 # With Icecast audio stream
 docker run -d \
@@ -27,7 +27,7 @@ docker run -d \
 -e RTMP_URL="rtmp://supercool.stream:1935/live" \
 -e SCREEN_HEIGHT=480 \
 -e SCREEN_WIDTH=854 \
-ghcr.io/rmitchellscott/pagecaster
+justintanner/pagecaster
 
 # With silent audio
 docker run -d \
@@ -37,7 +37,7 @@ docker run -d \
 -e RTMP_URL="rtmp://supercool.stream:1935/live" \
 -e SCREEN_HEIGHT=480 \
 -e SCREEN_WIDTH=854 \
-ghcr.io/rmitchellscott/pagecaster
+justintanner/pagecaster
 ```
 
 ## Docker Compose
@@ -47,7 +47,7 @@ version: '3.8'
 
 services:
   pagecaster:
-    image: ghcr.io/rmitchellscott/pagecaster
+    image: justintanner/pagecaster
     deploy:
       resources:
         limits:
@@ -95,7 +95,7 @@ spec:
           value: https://weatherstar.netbymatt.com/
        - name: ICE_URL
           value: https://radio.supercool.stream
-        image: ghcr.io/rmitchellscott/pagecaster
+        image: justintanner/pagecaster
         imagePullPolicy: IfNotPresent
         name: pagecaster
         volumeMounts:
@@ -134,7 +134,7 @@ spec:
         containers:
           pagecaster:
             image:
-              repository: ghcr.io/rmitchellscott/pagecaster
+              repository: justintanner/pagecaster
               pullPolicy: IfNotPresent
             env:
               WEB_URL: "https://weatherstar.netbymatt.com/"
