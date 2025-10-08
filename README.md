@@ -1,3 +1,8 @@
+```  
+WARNING: This Docker image is very CPU intensive, use at your own risk.
+PS: If you can speed this up, let me know.
+```
+
 # Pagecaster
 <img src="assets/logo.svg" alt="Ephemeris Icon" width="125" align="right">
 <p align="justify">
